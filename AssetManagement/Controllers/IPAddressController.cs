@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AssetManagement.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class IPAddressesController : ControllerBase
     {

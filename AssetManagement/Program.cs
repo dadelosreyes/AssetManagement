@@ -10,9 +10,11 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         // Convert enums to strings in JSON
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
         // Use camelCase for property names
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        // Accept both camelCase and PascalCase during deserialization
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
 builder.Services.AddDbContext<AssetManagementContext>(options =>
@@ -30,7 +32,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -53,6 +54,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 

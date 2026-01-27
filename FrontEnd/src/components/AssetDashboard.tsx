@@ -12,17 +12,17 @@ export const AssetDashboard = ({ assets }: AssetDashboardProps) => {
   const activeAssets = assets.filter(asset => asset.status === 'active').length;
   const inactiveAssets = assets.filter(asset => asset.status === 'inactive').length;
   const maintenanceAssets = assets.filter(asset => asset.status === 'maintenance').length;
-  
+
   const countByType = (type: AssetType['type']) => assets.filter(asset => asset.type === type).length;
 
   const stats = [
     { title: "Total Assets", value: totalAssets, icon: Activity, description: "All managed assets", color: "bg-gradient-primary" },
-    { title: "IP Addresses", value: countByType('ip_address'), icon: Globe, description: "Network addresses", color: "bg-info" },
+    { title: "IP Addresses", value: countByType('ip_address'), icon: Globe, description: "Network addresses", color: "bg-gradient-primary" },
     { title: "PCs", value: countByType('pc'), icon: Monitor, description: "Computer systems", color: "bg-success" },
-    { title: "Network Devices", value: countByType('network_device'), icon: Network, description: "Routers, switches, etc.", color: "bg-primary" },
-    { title: "Mobile Devices", value: countByType('mobile_device'), icon: Smartphone, description: "Phones & tablets", color: "bg-accent" },
-    { title: "Printers", value: countByType('printer'), icon: Printer, description: "Printing devices", color: "bg-secondary" },
-    { title: "Peripherals", value: countByType('peripheral'), icon: Mouse, description: "Keyboards, mice, etc.", color: "bg-muted" },
+    { title: "Network Devices", value: countByType('network_device'), icon: Network, description: "Routers, switches, etc.", color: "bg-gradient-primary" },
+    { title: "Mobile Devices", value: countByType('mobile_device'), icon: Smartphone, description: "Phones & tablets", color: "bg-gradient-primary" },
+    { title: "Printers", value: countByType('printer'), icon: Printer, description: "Printing devices", color: "bg-gradient-primary" },
+    { title: "Peripherals", value: countByType('peripheral'), icon: Mouse, description: "Keyboards, mice, etc.", color: "bg-gradient-primary" },
     { title: "Maintenance", value: maintenanceAssets, icon: AlertTriangle, description: "Under maintenance", color: "bg-warning" },
   ];
 
@@ -32,7 +32,7 @@ export const AssetDashboard = ({ assets }: AssetDashboardProps) => {
         <h2 className="text-3xl font-bold tracking-tight">Asset Overview</h2>
         <p className="text-muted-foreground">Manage and monitor your IT infrastructure assets</p>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;

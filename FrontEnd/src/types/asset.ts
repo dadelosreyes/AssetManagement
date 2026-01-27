@@ -35,7 +35,7 @@ export interface Peripheral extends Asset {
   serialNumber: string;
   model: string;
   manufacturer: string;
-  peripheralType: 'keyboard' | 'mouse' | 'monitor' | 'webcam' | 'headset' | 'docking_station' | 'other';
+  peripheralType: 'keyboard' | 'mouse' | 'monitor' | 'webcam' | 'headset' | 'dockingStation' | 'other';
   connectionType?: string;
 }
 
@@ -44,7 +44,7 @@ export interface NetworkDevice extends Asset {
   serialNumber: string;
   model: string;
   manufacturer: string;
-  deviceType: 'router' | 'switch' | 'access_point' | 'firewall' | 'modem' | 'other';
+  deviceType: 'router' | 'switch' | 'accessPoint' | 'firewall' | 'modem' | 'other';
   ipAddress?: string;
   macAddress?: string;
   portCount?: number;

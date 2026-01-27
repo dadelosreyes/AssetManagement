@@ -12,16 +12,17 @@ import { useToast } from "@/hooks/use-toast";
 interface AddAssetFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (asset: AssetType) => void;
+  onSave: (asset: any) => void;
   editingAsset?: AssetType;
 }
 
 type AssetTypeValue = AssetType['type'];
 
 export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAssetFormProps) => {
+  console.log("🟢 AddAssetForm rendered, isOpen:", isOpen);
   const { toast } = useToast();
   const [assetType, setAssetType] = useState<AssetTypeValue>(editingAsset?.type || 'ip_address');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     status: 'active',
@@ -112,10 +113,12 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
   }, [editingAsset, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
+    console.log("🔴 FORM SUBMIT TRIGGERED!", e);
     e.preventDefault();
-    
+    console.log("🔴 After preventDefault, assetType:", assetType);
+
     const baseAsset = {
-      id: editingAsset?.id || crypto.randomUUID(),
+      id: editingAsset?.id, // Let backend generate ID for new assets
       name: formData.name,
       status: formData.status as 'active' | 'inactive' | 'maintenance',
       location: formData.location,
@@ -124,10 +127,13 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
       updatedAt: new Date(),
     };
 
-    let asset: AssetType;
+    console.log("🟡 baseAsset created:", baseAsset);
+
+    let asset: any; // Use any temporarily to build partial object
 
     switch (assetType) {
       case 'ip_address':
+        console.log("🟡 Building IP Address asset...");
         asset = {
           ...baseAsset,
           type: 'ip_address',
@@ -137,6 +143,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
           dns: formData.dns || undefined,
           vlan: formData.vlan || undefined,
         };
+        console.log("🟡 IP Address asset built:", asset);
         break;
       case 'pc':
         asset = {
@@ -159,7 +166,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
           serialNumber: formData.serialNumber,
           model: formData.model,
           manufacturer: formData.manufacturer,
-          peripheralType: formData.peripheralType as any,
+          peripheralType: formData.peripheralType,
           connectionType: formData.connectionType || undefined,
         };
         break;
@@ -170,10 +177,10 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
           serialNumber: formData.serialNumber,
           model: formData.model,
           manufacturer: formData.manufacturer,
-          deviceType: formData.networkDeviceType as any,
+          deviceType: formData.networkDeviceType,
           ipAddress: formData.networkIpAddress || undefined,
           macAddress: formData.macAddress || undefined,
-          portCount: formData.portCount ? parseInt(formData.portCount) : undefined,
+          portCount: formData.portCount && !isNaN(parseInt(formData.portCount)) ? parseInt(formData.portCount) : undefined,
         };
         break;
       case 'mobile_device':
@@ -205,12 +212,11 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
         return;
     }
 
+    console.log("🟢 About to call onSave with asset:", asset);
+    console.log("🟢 onSave function is:", onSave);
+    console.log("🟢 Type of onSave:", typeof onSave);
     onSave(asset);
-    toast({
-      title: editingAsset ? "Asset Updated" : "Asset Created",
-      description: `${formData.name} has been ${editingAsset ? 'updated' : 'added'} successfully.`,
-    });
-    onClose();
+    // Note: toast and onClose are handled by the mutation callbacks in Assets.tsx
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -324,7 +330,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
                       <SelectItem value="monitor">Monitor</SelectItem>
                       <SelectItem value="webcam">Webcam</SelectItem>
                       <SelectItem value="headset">Headset</SelectItem>
-                      <SelectItem value="docking_station">Docking Station</SelectItem>
+                      <SelectItem value="dockingStation">Docking Station</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
@@ -368,7 +374,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
                     <SelectContent>
                       <SelectItem value="router">Router</SelectItem>
                       <SelectItem value="switch">Switch</SelectItem>
-                      <SelectItem value="access_point">Access Point</SelectItem>
+                      <SelectItem value="accessPoint">Access Point</SelectItem>
                       <SelectItem value="firewall">Firewall</SelectItem>
                       <SelectItem value="modem">Modem</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
@@ -523,7 +529,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
           <DialogTitle>{editingAsset ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
           <DialogDescription>{editingAsset ? 'Update the asset information below.' : 'Enter the details for the new asset.'}</DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

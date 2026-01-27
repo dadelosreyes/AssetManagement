@@ -192,7 +192,7 @@ export const sampleAssets: AssetType[] = [
     serialNumber: "DELL-DOCK-001",
     model: "WD19S",
     manufacturer: "Dell",
-    peripheralType: "docking_station",
+    peripheralType: "dockingStation",
     connectionType: "USB-C"
   },
   {
@@ -221,7 +221,7 @@ export const sampleAssets: AssetType[] = [
     serialNumber: "UBNT-AP-001",
     model: "UniFi 6 Pro",
     manufacturer: "Ubiquiti",
-    deviceType: "access_point",
+    deviceType: "accessPoint",
     ipAddress: "192.168.1.30",
     macAddress: "AA:BB:CC:DD:EE:FF"
   }

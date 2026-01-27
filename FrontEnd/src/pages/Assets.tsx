@@ -2,9 +2,10 @@ import { useState } from "react";
 import { AppBar } from "@/components/AppBar";
 import { AssetTable } from "@/components/AssetTable";
 import { AddAssetForm } from "@/components/AddAssetForm";
-import { sampleAssets } from "@/data/sampleAssets";
 import { AssetType } from "@/types/asset";
 import { useToast } from "@/hooks/use-toast";
+import { DebugPanel } from "@/components/DebugPanel";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,24 +16,130 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  assetApi,
+  ipAddressApi,
+  pcApi,
+  peripheralApi,
+  networkDeviceApi,
+  mobileDeviceApi,
+  printerApi,
+} from "@/services/api";
 
 const Assets = () => {
+  console.log("🔥 Assets.tsx component loaded/rendered");
   const { toast } = useToast();
-  const [assets, setAssets] = useState<AssetType[]>(sampleAssets);
+  const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<AssetType | undefined>();
   const [deleteAssetId, setDeleteAssetId] = useState<string | null>(null);
 
-  const handleSaveAsset = (asset: AssetType) => {
-    if (editingAsset) {
-      setAssets(assets.map((a) => (a.id === asset.id ? asset : a)));
-      toast({ title: "Asset updated", description: `${asset.name} has been updated.` });
-    } else {
-      setAssets([...assets, asset]);
-      toast({ title: "Asset added", description: `${asset.name} has been added.` });
+  // Fetch assets
+  const { data: assets = [], isLoading } = useQuery({
+    queryKey: ["assets"],
+    queryFn: () => assetApi.getAllAssets(),
+  });
+
+  // Helper to get the correct API based on asset type
+  const getApiForType = (type: AssetType["type"]) => {
+    switch (type) {
+      case "ip_address":
+        return ipAddressApi;
+      case "pc":
+        return pcApi;
+      case "peripheral":
+        return peripheralApi;
+      case "network_device":
+        return networkDeviceApi;
+      case "mobile_device":
+        return mobileDeviceApi;
+      case "printer":
+        return printerApi;
+      default:
+        throw new Error(`Unknown asset type: ${type}`);
     }
-    setIsFormOpen(false);
-    setEditingAsset(undefined);
+  };
+
+  // Create mutation
+  const createMutation = useMutation<AssetType, Error, Partial<AssetType>>({
+    mutationFn: (newAsset: Partial<AssetType>) => {
+      console.log("Creating asset:", newAsset);
+      const api = getApiForType(newAsset.type);
+      // @ts-ignore - Dynamic dispatch is tricky with strict types, but effectively safe here
+      return api.create(newAsset);
+    },
+    onSuccess: (data) => {
+      console.log("Asset created successfully:", data);
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toast({ title: "Asset added", description: "Successfully created new asset." });
+      setIsFormOpen(false);
+      setEditingAsset(undefined);
+    },
+    onError: (error) => {
+      console.error("Failed to create asset:", error);
+      toast({
+        title: "Error",
+        description: `Failed to create asset: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useMutation<void, Error, AssetType>({
+    mutationFn: (updatedAsset: AssetType) => {
+      const api = getApiForType(updatedAsset.type);
+      // @ts-ignore
+      return api.update(updatedAsset.id, updatedAsset);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toast({ title: "Asset updated", description: "Successfully updated asset." });
+      setIsFormOpen(false);
+      setEditingAsset(undefined);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update asset: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: (assetId: string) => {
+      const asset = assets.find((a) => a.id === assetId);
+      if (!asset) throw new Error("Asset not found");
+      const api = getApiForType(asset.type);
+      return api.delete(assetId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toast({
+        title: "Asset deleted",
+        description: "Successfully removed asset.",
+        variant: "destructive",
+      });
+      setDeleteAssetId(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete asset: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveAsset = (asset: any) => {
+    console.log("handleSaveAsset called with:", asset);
+    if (editingAsset) {
+      updateMutation.mutate(asset);
+    } else {
+      createMutation.mutate(asset);
+    }
   };
 
   const handleEditAsset = (asset: AssetType) => {
@@ -46,10 +153,7 @@ const Assets = () => {
 
   const confirmDeleteAsset = () => {
     if (deleteAssetId) {
-      const asset = assets.find((a) => a.id === deleteAssetId);
-      setAssets(assets.filter((a) => a.id !== deleteAssetId));
-      toast({ title: "Asset deleted", description: `${asset?.name} has been removed.`, variant: "destructive" });
-      setDeleteAssetId(null);
+      deleteMutation.mutate(deleteAssetId);
     }
   };
 
@@ -57,6 +161,10 @@ const Assets = () => {
     setEditingAsset(undefined);
     setIsFormOpen(true);
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading assets...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,14 +181,18 @@ const Assets = () => {
         <AddAssetForm
           isOpen={isFormOpen}
           onClose={() => {
+            console.log("🔵 onClose called");
             setIsFormOpen(false);
             setEditingAsset(undefined);
           }}
-          onSave={handleSaveAsset}
+          onSave={(asset) => {
+            console.log("🔵 onSave prop received in Assets.tsx:", asset);
+            handleSaveAsset(asset);
+          }}
           editingAsset={editingAsset}
         />
 
-        <AlertDialog open={!!deleteAssetId} onOpenChange={() => setDeleteAssetId(null)}>
+        <AlertDialog open={!!deleteAssetId || deleteMutation.isPending} onOpenChange={(open) => !open && setDeleteAssetId(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Asset</AlertDialogTitle>
@@ -89,13 +201,21 @@ const Assets = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDeleteAsset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Delete
+              <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmDeleteAsset();
+                }}
+                disabled={deleteMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <DebugPanel />
       </div>
     </div>
   );

@@ -32,12 +32,12 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
       ('serialNumber' in asset && asset.serialNumber.toLowerCase().includes(searchLower)) ||
       ('model' in asset && asset.model.toLowerCase().includes(searchLower)) ||
       ('manufacturer' in asset && asset.manufacturer.toLowerCase().includes(searchLower));
-    
-    const matchesVlan = selectedVlan === 'all' || 
+
+    const matchesVlan = selectedVlan === 'all' ||
       (asset.type === 'ip_address' && asset.vlan === selectedVlan);
-    
+
     const matchesType = selectedType === 'all' || asset.type === selectedType;
-    
+
     return matchesSearch && matchesVlan && matchesType;
   });
 
@@ -75,19 +75,19 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
 
   const testConnection = async (asset: AssetType) => {
     if (!('ipAddress' in asset) || !asset.ipAddress) return;
-    
+
     setTestingConnections(prev => new Set(prev).add(asset.id));
-    
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
-      
+
       await fetch(`http://${asset.ipAddress}`, {
         method: 'HEAD',
         mode: 'no-cors',
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
       setConnectionResults(prev => new Map(prev).set(asset.id, true));
     } catch {
@@ -103,10 +103,10 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
 
   const getConnectionIcon = (asset: AssetType) => {
     if (!('ipAddress' in asset) || !asset.ipAddress) return null;
-    
+
     const isLoading = testingConnections.has(asset.id);
     const result = connectionResults.get(asset.id);
-    
+
     if (isLoading) return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
     if (result === true) return <Wifi className="h-4 w-4 text-success" />;
     if (result === false) return <WifiOff className="h-4 w-4 text-destructive" />;
@@ -231,7 +231,7 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
             </Select>
           </div>
         </div>
-        
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -242,6 +242,8 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
                 <TableHead>Status</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Assigned To</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead>Updated At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -259,6 +261,8 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
                   <TableCell>{getStatusBadge(asset.status)}</TableCell>
                   <TableCell>{asset.location}</TableCell>
                   <TableCell>{asset.assignedTo || '-'}</TableCell>
+                  <TableCell>{new Date(asset.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(asset.updatedAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       {hasIpAddress(asset) && (
@@ -288,7 +292,7 @@ export const AssetTable = ({ assets, onAddAsset, onEditAsset, onDeleteAsset }: A
               ))}
               {filteredAssets.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     No assets found matching your search criteria.
                   </TableCell>
                 </TableRow>
