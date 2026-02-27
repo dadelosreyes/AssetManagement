@@ -1,33 +1,22 @@
-$base = "https://localhost:7154/api"
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+$assetTypes = Invoke-RestMethod -Uri "https://localhost:7154/api/AssetTypes" -Method Get
+foreach ($target in $assetTypes) {
+    Write-Host "Updating $($target.id) - $($target.name)"
+    
+    $body = @{
+        id                = $target.id
+        name              = $target.name
+        description       = $target.description
+        isCustom          = $target.isCustom
+        requiresIpAddress = $target.requiresIpAddress
+        fields            = $target.fields
+    } | ConvertTo-Json -Depth 10
 
-# Trust self-signed certs
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-
-Write-Host "Testing GET /Assets..."
-try {
-    $assets = Invoke-RestMethod -Uri "$base/Assets" -Method Get
-    Write-Host "Success! Found $($assets.Count) assets."
-} catch {
-    Write-Host "GET /Assets Failed: $_"
-}
-
-Write-Host "`nTesting POST /IPAddresses..."
-$body = @{
-    name = "Test IP from Script"
-    type = "ip_address"
-    status = "active"
-    location = "Script Location"
-    ipAddress = "10.0.0.99"
-    subnet = "255.255.255.0"
-} | ConvertTo-Json
-
-try {
-    $response = Invoke-RestMethod -Uri "$base/IPAddresses" -Method Post -Body $body -ContentType "application/json"
-    Write-Host "Success! Created IP Address with ID: $($response.id)"
-} catch {
-    Write-Host "POST /IPAddresses Failed: $_"
-    if ($_.Exception.Response) {
-        $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-        Write-Host "Response Body: $($reader.ReadToEnd())"
+    try {
+        $response = Invoke-RestMethod -Uri "https://localhost:7154/api/AssetTypes/$($target.id)" -Method Put -Headers @{"Content-Type" = "application/json" } -Body $body
+        Write-Host "SUCCESS: Updated"
+    }
+    catch {
+        Write-Host "ERROR: $( (New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())).ReadToEnd() )"
     }
 }

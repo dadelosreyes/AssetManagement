@@ -14,6 +14,7 @@ import {
   networkDeviceApi,
   mobileDeviceApi,
   printerApi,
+  customAssetApi,
 } from "@/services/api";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DebugPanel } from "@/components/DebugPanel";
@@ -40,7 +41,11 @@ const Index = () => {
       case "network_device": return networkDeviceApi;
       case "mobile_device": return mobileDeviceApi;
       case "printer": return printerApi;
-      default: throw new Error(`Unknown asset type: ${type}`);
+      default:
+        if (type.startsWith("custom_")) {
+          return customAssetApi;
+        }
+        throw new Error(`Unknown asset type: ${type}`);
     }
   };
 

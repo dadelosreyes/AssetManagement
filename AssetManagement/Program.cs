@@ -15,6 +15,17 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         // Accept both camelCase and PascalCase during deserialization
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value.Errors.Count > 0)
+                .Select(e => new { e.Key, Errors = e.Value.Errors.Select(x => x.ErrorMessage) });
+            Console.WriteLine("MODEL VALIDATION FAILED: " + System.Text.Json.JsonSerializer.Serialize(errors));
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(context.ModelState);
+        };
     });
 
 builder.Services.AddDbContext<AssetManagementContext>(options =>
@@ -45,6 +56,13 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Automatically apply migrations on startup (important for Docker containers)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AssetManagementContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

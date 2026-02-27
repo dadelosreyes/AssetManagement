@@ -15,6 +15,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 const navItems = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Assets", path: "/assets" },
+  { label: "Asset Types", path: "/asset-types" },
   { label: "Reports", path: "/reports" },
 ];
 
@@ -48,7 +49,7 @@ export const AppBar = () => {
             Asset Manager
           </span>
         </Link>
-        
+
         <nav className="ml-auto flex items-center gap-4">
           {navItems.map((item) => (
             <Button
@@ -57,14 +58,14 @@ export const AppBar = () => {
               size="sm"
               asChild
               className={location.pathname === item.path
-                ? "text-foreground font-medium" 
+                ? "text-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground"
               }
             >
               <Link to={item.path}>{item.label}</Link>
             </Button>
           ))}
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">

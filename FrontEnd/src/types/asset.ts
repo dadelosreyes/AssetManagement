@@ -1,7 +1,7 @@
 export interface Asset {
   id: string;
   name: string;
-  type: 'ip_address' | 'pc' | 'peripheral' | 'network_device' | 'mobile_device' | 'printer';
+  type: string; // 'ip_address' | 'pc' | 'peripheral' | 'network_device' | 'mobile_device' | 'printer' | custom_${id}
   status: 'active' | 'inactive' | 'maintenance';
   location: string;
   assignedTo?: string;
@@ -16,6 +16,7 @@ export interface IPAddress extends Asset {
   gateway?: string;
   dns?: string;
   vlan?: string;
+  isWlan?: boolean;
 }
 
 export interface PC extends Asset {
@@ -71,9 +72,38 @@ export interface Printer extends Asset {
   isNetworked: boolean;
 }
 
-export type AssetType = IPAddress | PC | Peripheral | NetworkDevice | MobileDevice | Printer;
+export interface AssetTypeField {
+  id?: string;
+  assetTypeId?: string;
+  name: string;
+  dataType: 'text' | 'number' | 'date' | 'boolean';
+  isRequired: boolean;
+  displayOrder: number;
+}
 
-export const ASSET_TYPE_LABELS: Record<AssetType['type'], string> = {
+export interface AssetTypeDef {
+  id: string;
+  name: string;
+  description?: string;
+  isCustom: boolean;
+  requiresIpAddress: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  fields: AssetTypeField[];
+}
+
+export interface CustomAsset extends Asset {
+  // We use `type: string` here because the actual value will be `custom_${assetTypeId}` or similar
+  type: string;
+  assetTypeId: string;
+  assetType?: AssetTypeDef;
+  ipAddress?: string;
+  customProperties: Record<string, string>;
+}
+
+export type AssetType = IPAddress | PC | Peripheral | NetworkDevice | MobileDevice | Printer | CustomAsset;
+
+export const ASSET_TYPE_LABELS: Record<string, string> = {
   ip_address: 'IP Address',
   pc: 'PC',
   peripheral: 'Peripheral',
@@ -81,3 +111,5 @@ export const ASSET_TYPE_LABELS: Record<AssetType['type'], string> = {
   mobile_device: 'Mobile Device',
   printer: 'Printer',
 };
+// Note: ASSET_TYPE_LABELS might not cover dynamic custom asset types out of the box,
+// they need to be displayed via fetching the AssetTypeDef.

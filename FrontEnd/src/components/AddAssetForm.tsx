@@ -6,8 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { AssetType, ASSET_TYPE_LABELS } from "@/types/asset";
+import { AssetType, AssetTypeDef, ASSET_TYPE_LABELS } from "@/types/asset";
 import { useToast } from "@/hooks/use-toast";
+import { assetTypeApi } from "@/services/api";
 
 interface AddAssetFormProps {
   isOpen: boolean;
@@ -21,7 +22,9 @@ type AssetTypeValue = AssetType['type'];
 export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAssetFormProps) => {
   console.log("🟢 AddAssetForm rendered, isOpen:", isOpen);
   const { toast } = useToast();
-  const [assetType, setAssetType] = useState<AssetTypeValue>(editingAsset?.type || 'ip_address');
+  const [assetType, setAssetType] = useState<string>(editingAsset?.type || 'ip_address');
+  const [customAssetTypes, setCustomAssetTypes] = useState<AssetTypeDef[]>([]);
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -34,6 +37,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
     gateway: '',
     dns: '',
     vlan: '',
+    isWlan: false,
     // Common device fields
     serialNumber: '',
     model: '',
@@ -64,44 +68,59 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
   });
 
   useEffect(() => {
+    // Fetch custom asset types
+    assetTypeApi.getAll()
+      .then(data => setCustomAssetTypes(data))
+      .catch(err => console.error("Failed to load asset types", err));
+  }, []);
+
+  useEffect(() => {
     if (editingAsset) {
-      setAssetType(editingAsset.type);
+      const editing = editingAsset as any;
+      setAssetType(editing.type);
       setFormData({
-        name: editingAsset.name,
-        status: editingAsset.status,
-        location: editingAsset.location,
-        assignedTo: editingAsset.assignedTo || '',
-        ipAddress: editingAsset.type === 'ip_address' ? editingAsset.ipAddress : '',
-        subnet: editingAsset.type === 'ip_address' ? editingAsset.subnet : '',
-        gateway: editingAsset.type === 'ip_address' ? editingAsset.gateway || '' : '',
-        dns: editingAsset.type === 'ip_address' ? editingAsset.dns || '' : '',
-        vlan: editingAsset.type === 'ip_address' ? editingAsset.vlan || '' : '',
-        serialNumber: 'serialNumber' in editingAsset ? editingAsset.serialNumber : '',
-        model: 'model' in editingAsset ? editingAsset.model : '',
-        manufacturer: 'manufacturer' in editingAsset ? editingAsset.manufacturer : '',
-        operatingSystem: editingAsset.type === 'pc' ? editingAsset.operatingSystem : '',
-        processor: editingAsset.type === 'pc' ? editingAsset.processor : '',
-        memory: editingAsset.type === 'pc' ? editingAsset.memory : '',
-        storage: editingAsset.type === 'pc' ? editingAsset.storage : '',
-        pcIpAddress: editingAsset.type === 'pc' ? editingAsset.ipAddress || '' : '',
-        peripheralType: editingAsset.type === 'peripheral' ? editingAsset.peripheralType : 'keyboard',
-        connectionType: editingAsset.type === 'peripheral' ? editingAsset.connectionType || '' : '',
-        networkDeviceType: editingAsset.type === 'network_device' ? editingAsset.deviceType : 'router',
-        macAddress: editingAsset.type === 'network_device' ? editingAsset.macAddress || '' : '',
-        portCount: editingAsset.type === 'network_device' ? String(editingAsset.portCount || '') : '',
-        networkIpAddress: editingAsset.type === 'network_device' ? editingAsset.ipAddress || '' : '',
-        mobileDeviceType: editingAsset.type === 'mobile_device' ? editingAsset.deviceType : 'smartphone',
-        mobileOS: editingAsset.type === 'mobile_device' ? editingAsset.operatingSystem : '',
-        imei: editingAsset.type === 'mobile_device' ? editingAsset.imei || '' : '',
-        phoneNumber: editingAsset.type === 'mobile_device' ? editingAsset.phoneNumber || '' : '',
-        printerType: editingAsset.type === 'printer' ? editingAsset.printerType : 'laser',
-        printerIpAddress: editingAsset.type === 'printer' ? editingAsset.ipAddress || '' : '',
-        isNetworked: editingAsset.type === 'printer' ? editingAsset.isNetworked : false,
+        name: editing.name,
+        status: editing.status,
+        location: editing.location,
+        assignedTo: editing.assignedTo || '',
+        ipAddress: editing.type === 'ip_address' ? editing.ipAddress : (editing.type?.startsWith('custom_') ? editing.ipAddress || '' : ''),
+        subnet: editing.type === 'ip_address' ? editing.subnet : (editing.type?.startsWith('custom_') ? editing.customProperties?.subnet || '' : ''),
+        gateway: editing.type === 'ip_address' ? editing.gateway || '' : (editing.type?.startsWith('custom_') ? editing.customProperties?.gateway || '' : ''),
+        dns: editing.type === 'ip_address' ? editing.dns || '' : (editing.type?.startsWith('custom_') ? editing.customProperties?.dns || '' : ''),
+        vlan: editing.type === 'ip_address' ? editing.vlan || '' : (editing.type?.startsWith('custom_') ? editing.customProperties?.vlan || '' : ''),
+        isWlan: editing.type === 'ip_address' ? editing.isWlan || false : (editing.type?.startsWith('custom_') ? editing.customProperties?.isWlan === 'true' : false),
+        serialNumber: 'serialNumber' in editing ? editing.serialNumber : '',
+        model: 'model' in editing ? editing.model : '',
+        manufacturer: 'manufacturer' in editing ? editing.manufacturer : '',
+        operatingSystem: editing.type === 'pc' ? editing.operatingSystem : '',
+        processor: editing.type === 'pc' ? editing.processor : '',
+        memory: editing.type === 'pc' ? editing.memory : '',
+        storage: editing.type === 'pc' ? editing.storage : '',
+        pcIpAddress: editing.type === 'pc' ? editing.ipAddress || '' : '',
+        peripheralType: editing.type === 'peripheral' ? editing.peripheralType : 'keyboard',
+        connectionType: editing.type === 'peripheral' ? editing.connectionType || '' : '',
+        networkDeviceType: editing.type === 'network_device' ? editing.deviceType : 'router',
+        macAddress: editing.type === 'network_device' ? editing.macAddress || '' : '',
+        portCount: editing.type === 'network_device' ? String(editing.portCount || '') : '',
+        networkIpAddress: editing.type === 'network_device' ? editing.ipAddress || '' : '',
+        mobileDeviceType: editing.type === 'mobile_device' ? editing.deviceType : 'smartphone',
+        mobileOS: editing.type === 'mobile_device' ? editing.operatingSystem : '',
+        imei: editing.type === 'mobile_device' ? editing.imei || '' : '',
+        phoneNumber: editing.type === 'mobile_device' ? editing.phoneNumber || '' : '',
+        printerType: editing.type === 'printer' ? editing.printerType : 'laser',
+        printerIpAddress: editing.type === 'printer' ? editing.ipAddress || '' : '',
+        isNetworked: editing.type === 'printer' ? editing.isNetworked : false,
       });
+
+      if (editing.type.startsWith('custom_')) {
+        setCustomFieldsData(editing.customProperties || {});
+      } else {
+        setCustomFieldsData({});
+      }
     } else {
       setFormData({
         name: '', status: 'active', location: '', assignedTo: '',
-        ipAddress: '', subnet: '', gateway: '', dns: '', vlan: '',
+        ipAddress: '', subnet: '', gateway: '', dns: '', vlan: '', isWlan: false,
         serialNumber: '', model: '', manufacturer: '',
         operatingSystem: '', processor: '', memory: '', storage: '', pcIpAddress: '',
         peripheralType: 'keyboard', connectionType: '',
@@ -109,6 +128,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
         mobileDeviceType: 'smartphone', mobileOS: '', imei: '', phoneNumber: '',
         printerType: 'laser', printerIpAddress: '', isNetworked: false,
       });
+      setCustomFieldsData({});
     }
   }, [editingAsset, isOpen]);
 
@@ -142,6 +162,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
           gateway: formData.gateway || undefined,
           dns: formData.dns || undefined,
           vlan: formData.vlan || undefined,
+          isWlan: formData.isWlan || false,
         };
         console.log("🟡 IP Address asset built:", asset);
         break;
@@ -209,7 +230,31 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
         };
         break;
       default:
-        return;
+        // Handle CustomAssets
+        if (assetType.startsWith("custom_")) {
+          const typeId = assetType.substring(7);
+          const typeDef = customAssetTypes.find(t => t.id === typeId);
+          let customProps = { ...customFieldsData };
+
+          if (typeDef?.requiresIpAddress) {
+            if (formData.subnet) customProps['subnet'] = formData.subnet;
+            if (formData.gateway) customProps['gateway'] = formData.gateway;
+            if (formData.dns) customProps['dns'] = formData.dns;
+            if (formData.vlan) customProps['vlan'] = formData.vlan;
+            customProps['isWlan'] = formData.isWlan ? 'true' : 'false';
+          }
+
+          asset = {
+            ...baseAsset,
+            type: assetType, // Will be ignored by backend for type, backend looks at AssetTypeId or URL
+            assetTypeId: typeId,
+            ipAddress: formData.ipAddress || undefined,
+            customProperties: customProps
+          };
+        } else {
+          return;
+        }
+        break;
     }
 
     console.log("🟢 About to call onSave with asset:", asset);
@@ -223,43 +268,53 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCustomFieldChange = (fieldId: string, value: string | boolean) => {
+    setCustomFieldsData(prev => ({ ...prev, [fieldId]: String(value) }));
+  };
+
+  const renderIpAddressFields = (title: string, description: string) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="ipAddress">IP Address *</Label>
+            <Input id="ipAddress" value={formData.ipAddress} onChange={(e) => handleInputChange('ipAddress', e.target.value)} placeholder="192.168.1.100" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="subnet">Subnet *</Label>
+            <Input id="subnet" value={formData.subnet} onChange={(e) => handleInputChange('subnet', e.target.value)} placeholder="255.255.255.0" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="vlan">VLAN</Label>
+            <Input id="vlan" value={formData.vlan} onChange={(e) => handleInputChange('vlan', e.target.value)} placeholder="VLAN-100" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gateway">Gateway</Label>
+            <Input id="gateway" value={formData.gateway} onChange={(e) => handleInputChange('gateway', e.target.value)} placeholder="192.168.1.1" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dns">DNS</Label>
+            <Input id="dns" value={formData.dns} onChange={(e) => handleInputChange('dns', e.target.value)} placeholder="8.8.8.8" />
+          </div>
+          <div className="space-y-2 flex items-center pt-2 gap-2">
+            <Switch id="isWlan" checked={formData.isWlan} onCheckedChange={(checked) => handleInputChange('isWlan', checked)} />
+            <Label htmlFor="isWlan">Is WLAN</Label>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const renderTypeSpecificFields = () => {
     switch (assetType) {
       case 'ip_address':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>IP Address Details</CardTitle>
-              <CardDescription>Network configuration information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ipAddress">IP Address *</Label>
-                  <Input id="ipAddress" value={formData.ipAddress} onChange={(e) => handleInputChange('ipAddress', e.target.value)} placeholder="192.168.1.100" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subnet">Subnet *</Label>
-                  <Input id="subnet" value={formData.subnet} onChange={(e) => handleInputChange('subnet', e.target.value)} placeholder="255.255.255.0" required />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vlan">VLAN</Label>
-                  <Input id="vlan" value={formData.vlan} onChange={(e) => handleInputChange('vlan', e.target.value)} placeholder="VLAN-100" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gateway">Gateway</Label>
-                  <Input id="gateway" value={formData.gateway} onChange={(e) => handleInputChange('gateway', e.target.value)} placeholder="192.168.1.1" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dns">DNS</Label>
-                  <Input id="dns" value={formData.dns} onChange={(e) => handleInputChange('dns', e.target.value)} placeholder="8.8.8.8" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return renderIpAddressFields('IP Address Details', 'Network configuration information');
 
       case 'pc':
         return (
@@ -519,6 +574,56 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
             </CardContent>
           </Card>
         );
+      default:
+        if (assetType.startsWith("custom_")) {
+          const typeDef = customAssetTypes.find(t => t.id === assetType.substring(7));
+          if (!typeDef) return null;
+
+          return (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{typeDef.name} Details</CardTitle>
+                  <CardDescription>{typeDef.description || 'Custom asset information'}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {(typeDef.fields || []).slice().sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).map(field => {
+                      const fieldId = field.id || field.name; // Fallback to name if id is missing somehow
+                      const value = customFieldsData[fieldId] || '';
+                      if (field.dataType === 'boolean') {
+                        return (
+                          <div key={fieldId} className="space-y-2 flex items-center gap-2 pt-6">
+                            <Switch
+                              id={fieldId}
+                              checked={value === 'true'}
+                              onCheckedChange={(checked) => handleCustomFieldChange(fieldId, checked.toString())}
+                            />
+                            <Label htmlFor={fieldId}>{field.name} {field.isRequired && '*'}</Label>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={fieldId} className="space-y-2">
+                          <Label htmlFor={fieldId}>{field.name} {field.isRequired && '*'}</Label>
+                          <Input
+                            id={fieldId}
+                            type={field.dataType === 'date' ? 'date' : field.dataType === 'number' ? 'number' : 'text'}
+                            value={value}
+                            onChange={(e) => handleCustomFieldChange(fieldId, e.target.value)}
+                            required={field.isRequired}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+              {typeDef.requiresIpAddress && renderIpAddressFields("Network Details", "Network & IP Information for this Asset")}
+            </div>
+          );
+        }
+        return null;
     }
   };
 
@@ -534,11 +639,14 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="assetType">Asset Type</Label>
-              <Select value={assetType} onValueChange={(v: AssetTypeValue) => setAssetType(v)} disabled={!!editingAsset}>
+              <Select value={assetType} onValueChange={(v: string) => setAssetType(v)} disabled={!!editingAsset}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                  {customAssetTypes.map(t => (
+                    <SelectItem key={t.id} value={`custom_${t.id}`}>{t.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

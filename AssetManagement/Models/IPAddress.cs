@@ -25,6 +25,9 @@ namespace AssetManagement.Models
 
         [StringLength(50)]
         public string? Vlan { get; set; }
+
+        [Required]
+        public bool IsWlan { get; set; }
     }
 
 }

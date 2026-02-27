@@ -20,6 +20,9 @@ namespace AssetManagement.Data
         public DbSet<NetworkDevice> NetworkDevices { get; set; }
         public DbSet<MobileDevice> MobileDevices { get; set; }
         public DbSet<Printer> Printers { get; set; }
+        public DbSet<AssetType> AssetTypes { get; set; }
+        public DbSet<AssetTypeField> AssetTypeFields { get; set; }
+        public DbSet<CustomAsset> CustomAssets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +35,20 @@ namespace AssetManagement.Data
             modelBuilder.Entity<NetworkDevice>().ToTable("NetworkDevices");
             modelBuilder.Entity<MobileDevice>().ToTable("MobileDevices");
             modelBuilder.Entity<Printer>().ToTable("Printers");
+            modelBuilder.Entity<CustomAsset>().ToTable("CustomAssets");
+
+            modelBuilder.Entity<AssetTypeField>()
+                .Property(f => f.DataType)
+                .HasConversion<string>();
+
+            // Configure dictionary as JSON
+            modelBuilder.Entity<CustomAsset>()
+                .Property(b => b.CustomProperties)
+                .HasColumnType("nvarchar(max)")
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null),
+                    v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(v, (System.Text.Json.JsonSerializerOptions)null)!
+                );
 
             // Configure enum conversions to strings
             modelBuilder.Entity<Asset>()

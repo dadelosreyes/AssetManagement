@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=SuperSecretPass123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    # Health check: poll every 10s until SQL Server accepts connections
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'SuperSecretPass123!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    image: ghcr.io/dadelosreyes/assetmanagement-api:latest
+    environment:
+      - ConnectionStrings__AssetManagementContext=Server=sql-server;Database=AssetManagement;User Id=sa;Password=SuperSecretPass123!;TrustServerCertificate=True;
+      - ASPNETCORE_ENVIRONMENT=Production
+    ports:
+      - "5000:8080"
+    # Wait until SQL Server is confirmed healthy before starting
+    # EF Core db.Database.Migrate() in Program.cs will auto-apply any new migrations
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    restart: on-failure
+
+  frontend:
+    image: ghcr.io/dadelosreyes/assetmanagement-frontend:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: on-failure
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Check for updates every 300 seconds (5 minutes) for api and frontend containers
+    command: --interval 300 api frontend
+    restart: always
+
+volumes:
+  sql_data:

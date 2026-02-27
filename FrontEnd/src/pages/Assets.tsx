@@ -24,6 +24,7 @@ import {
   networkDeviceApi,
   mobileDeviceApi,
   printerApi,
+  customAssetApi,
 } from "@/services/api";
 
 const Assets = () => {
@@ -56,6 +57,9 @@ const Assets = () => {
       case "printer":
         return printerApi;
       default:
+        if (type.startsWith("custom_")) {
+          return customAssetApi;
+        }
         throw new Error(`Unknown asset type: ${type}`);
     }
   };

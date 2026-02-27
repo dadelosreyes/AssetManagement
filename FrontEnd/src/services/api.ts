@@ -6,6 +6,8 @@ import {
   NetworkDevice,
   MobileDevice,
   Printer,
+  AssetTypeDef,
+  CustomAsset,
 } from "@/types/asset";
 
 const API_BASE_URL =
@@ -64,6 +66,7 @@ interface AssetStatistics {
     networkDevices: number;
     mobileDevices: number;
     printers: number;
+    customAssets: number;
   };
   byStatus: {
     active: number;
@@ -254,4 +257,42 @@ export const printerApi = {
     }),
   delete: async (id: string): Promise<void> =>
     fetchApi<void>(`/Printers/${id}`, { method: "DELETE" }),
+};
+
+// Asset Type API functions
+export const assetTypeApi = {
+  getAll: async (): Promise<AssetTypeDef[]> => fetchApi<AssetTypeDef[]>("/AssetTypes"),
+  getById: async (id: string): Promise<AssetTypeDef> =>
+    fetchApi<AssetTypeDef>(`/AssetTypes/${id}`),
+  create: async (data: Partial<AssetTypeDef>): Promise<AssetTypeDef> =>
+    fetchApi<AssetTypeDef>("/AssetTypes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: async (id: string, data: Partial<AssetTypeDef>): Promise<void> =>
+    fetchApi<void>(`/AssetTypes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: async (id: string): Promise<void> =>
+    fetchApi<void>(`/AssetTypes/${id}`, { method: "DELETE" }),
+};
+
+// Custom Asset API functions
+export const customAssetApi = {
+  getAll: async (): Promise<CustomAsset[]> => fetchApi<CustomAsset[]>("/CustomAssets"),
+  getById: async (id: string): Promise<CustomAsset> =>
+    fetchApi<CustomAsset>(`/CustomAssets/${id}`),
+  create: async (data: Partial<CustomAsset>): Promise<CustomAsset> =>
+    fetchApi<CustomAsset>("/CustomAssets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: async (id: string, data: Partial<CustomAsset>): Promise<void> =>
+    fetchApi<void>(`/CustomAssets/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: async (id: string): Promise<void> =>
+    fetchApi<void>(`/CustomAssets/${id}`, { method: "DELETE" }),
 };

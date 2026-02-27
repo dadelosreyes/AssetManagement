@@ -64,6 +64,18 @@ namespace AssetManagement.Controllers
                 allAssets.AddRange(printers);
             }
 
+            if (type == null || type.StartsWith("custom_"))
+            {
+                var customAssetsQuery = _context.CustomAssets.AsQueryable();
+                if (type != null) 
+                {
+                    var typeId = type.Substring(7);
+                    customAssetsQuery = customAssetsQuery.Where(c => c.AssetTypeId == typeId);
+                }
+                var customAssets = await customAssetsQuery.ToListAsync();
+                allAssets.AddRange(customAssets);
+            }
+
             // Filter by status if specified
             if (!string.IsNullOrEmpty(status))
             {
@@ -102,9 +114,10 @@ namespace AssetManagement.Controllers
             var networkDeviceCount = await _context.NetworkDevices.CountAsync();
             var mobileDeviceCount = await _context.MobileDevices.CountAsync();
             var printerCount = await _context.Printers.CountAsync();
+            var customAssetCount = await _context.CustomAssets.CountAsync();
 
             var totalAssets = ipAddressCount + pcCount + peripheralCount +
-                            networkDeviceCount + mobileDeviceCount + printerCount;
+                            networkDeviceCount + mobileDeviceCount + printerCount + customAssetCount;
 
             // Count by status (approximate - you may want to refine this)
             var activeCount =
@@ -113,7 +126,8 @@ namespace AssetManagement.Controllers
                 await _context.Peripherals.CountAsync(a => a.Status == AssetStatus.Active) +
                 await _context.NetworkDevices.CountAsync(a => a.Status == AssetStatus.Active) +
                 await _context.MobileDevices.CountAsync(a => a.Status == AssetStatus.Active) +
-                await _context.Printers.CountAsync(a => a.Status == AssetStatus.Active);
+                await _context.Printers.CountAsync(a => a.Status == AssetStatus.Active) +
+                await _context.CustomAssets.CountAsync(a => a.Status == AssetStatus.Active);
 
             var inactiveCount =
                 await _context.IPAddresses.CountAsync(a => a.Status == AssetStatus.Inactive) +
@@ -121,7 +135,8 @@ namespace AssetManagement.Controllers
                 await _context.Peripherals.CountAsync(a => a.Status == AssetStatus.Inactive) +
                 await _context.NetworkDevices.CountAsync(a => a.Status == AssetStatus.Inactive) +
                 await _context.MobileDevices.CountAsync(a => a.Status == AssetStatus.Inactive) +
-                await _context.Printers.CountAsync(a => a.Status == AssetStatus.Inactive);
+                await _context.Printers.CountAsync(a => a.Status == AssetStatus.Inactive) +
+                await _context.CustomAssets.CountAsync(a => a.Status == AssetStatus.Inactive);
 
             var maintenanceCount =
                 await _context.IPAddresses.CountAsync(a => a.Status == AssetStatus.Maintenance) +
@@ -129,7 +144,8 @@ namespace AssetManagement.Controllers
                 await _context.Peripherals.CountAsync(a => a.Status == AssetStatus.Maintenance) +
                 await _context.NetworkDevices.CountAsync(a => a.Status == AssetStatus.Maintenance) +
                 await _context.MobileDevices.CountAsync(a => a.Status == AssetStatus.Maintenance) +
-                await _context.Printers.CountAsync(a => a.Status == AssetStatus.Maintenance);
+                await _context.Printers.CountAsync(a => a.Status == AssetStatus.Maintenance) +
+                await _context.CustomAssets.CountAsync(a => a.Status == AssetStatus.Maintenance);
 
             return Ok(new
             {
@@ -141,7 +157,8 @@ namespace AssetManagement.Controllers
                     peripherals = peripheralCount,
                     networkDevices = networkDeviceCount,
                     mobileDevices = mobileDeviceCount,
-                    printers = printerCount
+                    printers = printerCount,
+                    customAssets = customAssetCount
                 },
                 byStatus = new
                 {
@@ -218,6 +235,15 @@ namespace AssetManagement.Controllers
                            p.SerialNumber.ToLower().Contains(searchTerm))
                 .ToListAsync();
             results.AddRange(printers);
+            
+            // Search in CustomAssets
+            var customAssets = await _context.CustomAssets
+                .Where(c => c.Name.ToLower().Contains(searchTerm) ||
+                           c.Location.ToLower().Contains(searchTerm) ||
+                           (c.AssignedTo != null && c.AssignedTo.ToLower().Contains(searchTerm)))
+                .ToListAsync();
+            // Optional: can filter into CustomProperties strings as well if we write an EF.Functions.Like or evaluate locally
+            results.AddRange(customAssets);
 
             return Ok(results);
         }

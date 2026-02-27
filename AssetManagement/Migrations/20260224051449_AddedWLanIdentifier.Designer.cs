@@ -4,6 +4,7 @@ using AssetManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AssetManagement.Migrations
 {
     [DbContext(typeof(AssetManagementContext))]
-    partial class AssetManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20260224051449_AddedWLanIdentifier")]
+    partial class AddedWLanIdentifier
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,87 +63,6 @@ namespace AssetManagement.Migrations
                     b.ToTable("Asset");
 
                     b.UseTptMappingStrategy();
-                });
-
-            modelBuilder.Entity("AssetManagement.Models.AssetType", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsCustom")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("RequiresIpAddress")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AssetTypes");
-                });
-
-            modelBuilder.Entity("AssetManagement.Models.AssetTypeField", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AssetTypeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("DataType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsRequired")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetTypeId");
-
-                    b.ToTable("AssetTypeFields");
-                });
-
-            modelBuilder.Entity("AssetManagement.Models.CustomAsset", b =>
-                {
-                    b.HasBaseType("AssetManagement.Models.Asset");
-
-                    b.Property<string>("AssetTypeId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CustomProperties")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasIndex("AssetTypeId");
-
-                    b.ToTable("CustomAssets", (string)null);
                 });
 
             modelBuilder.Entity("AssetManagement.Models.IPAddress", b =>
@@ -372,32 +294,6 @@ namespace AssetManagement.Migrations
                     b.ToTable("Printers", (string)null);
                 });
 
-            modelBuilder.Entity("AssetManagement.Models.AssetTypeField", b =>
-                {
-                    b.HasOne("AssetManagement.Models.AssetType", "AssetType")
-                        .WithMany("Fields")
-                        .HasForeignKey("AssetTypeId");
-
-                    b.Navigation("AssetType");
-                });
-
-            modelBuilder.Entity("AssetManagement.Models.CustomAsset", b =>
-                {
-                    b.HasOne("AssetManagement.Models.AssetType", "AssetType")
-                        .WithMany()
-                        .HasForeignKey("AssetTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AssetManagement.Models.Asset", null)
-                        .WithOne()
-                        .HasForeignKey("AssetManagement.Models.CustomAsset", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AssetType");
-                });
-
             modelBuilder.Entity("AssetManagement.Models.IPAddress", b =>
                 {
                     b.HasOne("AssetManagement.Models.Asset", null)
@@ -450,11 +346,6 @@ namespace AssetManagement.Migrations
                         .HasForeignKey("AssetManagement.Models.Printer", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AssetManagement.Models.AssetType", b =>
-                {
-                    b.Navigation("Fields");
                 });
 #pragma warning restore 612, 618
         }
