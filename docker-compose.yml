@@ -8,13 +8,13 @@ services:
       - ConnectionStrings__AssetManagementContext=Data Source=10.10.11.240;Database=AssetManagement;User ID=sa;Password=Zebrap430i;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False;
       - ASPNETCORE_ENVIRONMENT=Production
     ports:
-      - "5000:8080"
+      - "0.0.0.0:5000:8080"
     restart: on-failure
 
   frontend:
     image: ghcr.io/dadelosreyes/assetmanagement-frontend:latest
     ports:
-      - "8080:80"
+      - "0.0.0.0:8080:80"
     depends_on:
       - api
     restart: on-failure
