@@ -31,13 +31,15 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<AssetManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AssetManagementContext") ?? throw new InvalidOperationException("Connection string 'AssetManagementContext' not found.")));
 
-// Add CORS policy
+// CORS: allow any origin — in Docker, the browser only ever talks to the frontend
+// container (same origin), and Nginx proxies /api to the API internally.
+// AllowAnyOrigin() also keeps local development (npm run dev) working without config.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:8080") // Vite default ports
+            policy.AllowAnyOrigin()
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
