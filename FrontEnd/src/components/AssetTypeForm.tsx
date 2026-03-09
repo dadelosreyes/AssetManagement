@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { AssetTypeDef, AssetTypeField } from "@/types/asset";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Box, Monitor, Smartphone, Printer, Network, Server, Database, Globe, Wifi, Cpu, Speaker, Camera, Video, Keyboard, Mouse } from "lucide-react";
 
 interface AssetTypeFormProps {
     isOpen: boolean;
@@ -20,6 +20,7 @@ export const AssetTypeForm = ({ isOpen, onClose, onSave, editingType }: AssetTyp
     const [name, setName] = useState(editingType?.name || "");
     const [description, setDescription] = useState(editingType?.description || "");
     const [requiresIpAddress, setRequiresIpAddress] = useState(editingType?.requiresIpAddress || false);
+    const [icon, setIcon] = useState(editingType?.icon || "Box");
     const [fields, setFields] = useState<Omit<AssetTypeField, 'id' | 'assetTypeId'>[]>(
         editingType?.fields || [
             { name: "Serial Number", dataType: "text", isRequired: true, displayOrder: 1 },
@@ -32,11 +33,13 @@ export const AssetTypeForm = ({ isOpen, onClose, onSave, editingType }: AssetTyp
             setName(editingType.name);
             setDescription(editingType.description || "");
             setRequiresIpAddress(editingType.requiresIpAddress || false);
+            setIcon(editingType.icon || "Box");
             setFields(editingType.fields);
         } else {
             setName("");
             setDescription("");
             setRequiresIpAddress(false);
+            setIcon("Box");
             setFields([
                 { name: "Serial Number", dataType: "text", isRequired: true, displayOrder: 1 },
                 { name: "Manufacturer", dataType: "text", isRequired: true, displayOrder: 2 },
@@ -58,6 +61,33 @@ export const AssetTypeForm = ({ isOpen, onClose, onSave, editingType }: AssetTyp
         setFields(updated);
     };
 
+    const AVAILABLE_ICONS = [
+        "Box", "Monitor", "Smartphone", "Printer", "Network", "Server", "Database",
+        "Globe", "Wifi", "Cpu", "Speaker", "Camera", "Video", "Keyboard", "Mouse"
+    ];
+
+    const renderIcon = (iconName: string, className = "h-4 w-4") => {
+        switch (iconName) {
+            case "Monitor": return <Monitor className={className} />;
+            case "Smartphone": return <Smartphone className={className} />;
+            case "Printer": return <Printer className={className} />;
+            case "Network": return <Network className={className} />;
+            case "Server": return <Server className={className} />;
+            case "Database": return <Database className={className} />;
+            case "Globe": return <Globe className={className} />;
+            case "Wifi": return <Wifi className={className} />;
+            case "Cpu": return <Cpu className={className} />;
+            case "Speaker": return <Speaker className={className} />;
+            case "Camera": return <Camera className={className} />;
+            case "Video": return <Video className={className} />;
+            case "Keyboard": return <Keyboard className={className} />;
+            case "Mouse": return <Mouse className={className} />;
+            case "Box":
+            default:
+                return <Box className={className} />;
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
@@ -67,6 +97,7 @@ export const AssetTypeForm = ({ isOpen, onClose, onSave, editingType }: AssetTyp
             description,
             isCustom: true,
             requiresIpAddress,
+            icon,
             fields: fields.map((f, i) => ({ ...f, displayOrder: i + 1 })) as AssetTypeField[]
         });
     };
@@ -88,6 +119,27 @@ export const AssetTypeForm = ({ isOpen, onClose, onSave, editingType }: AssetTyp
                         <div className="space-y-2">
                             <Label htmlFor="description">Description</Label>
                             <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description" />
+                        </div>
+                        <div className="space-y-2 flex flex-col pt-2">
+                            <Label>Icon Preview</Label>
+                            <Select value={icon} onValueChange={setIcon}>
+                                <SelectTrigger className="w-full">
+                                    <div className="flex items-center gap-2">
+                                        {renderIcon(icon)}
+                                        <span>{icon}</span>
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[200px]">
+                                    {AVAILABLE_ICONS.map(i => (
+                                        <SelectItem key={i} value={i}>
+                                            <div className="flex items-center gap-2">
+                                                {renderIcon(i)}
+                                                <span>{i}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2 flex items-center pt-2 gap-2">
                             <Switch checked={requiresIpAddress} onCheckedChange={setRequiresIpAddress} id="requiresIpAddress" />

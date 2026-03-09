@@ -19,6 +19,8 @@ namespace AssetManagement.Models
 
         public bool RequiresIpAddress { get; set; } = false;
 
+        public string? Icon { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

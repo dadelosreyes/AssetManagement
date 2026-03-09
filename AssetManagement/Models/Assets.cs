@@ -24,6 +24,12 @@ namespace AssetManagement.Models
         [StringLength(200)]
         public string? AssignedTo { get; set; }
 
+        public string? Details { get; set; }
+
+        public string? ParentAssetId { get; set; }
+
+        public virtual Asset? ParentAsset { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

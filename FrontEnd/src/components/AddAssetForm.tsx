@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Switch } from "@/components/ui/switch";
 import { AssetType, AssetTypeDef, ASSET_TYPE_LABELS } from "@/types/asset";
 import { useToast } from "@/hooks/use-toast";
-import { assetTypeApi } from "@/services/api";
+import { assetTypeApi, assetApi } from "@/services/api";
 
 interface AddAssetFormProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
   const { toast } = useToast();
   const [assetType, setAssetType] = useState<string>(editingAsset?.type || 'ip_address');
   const [customAssetTypes, setCustomAssetTypes] = useState<AssetTypeDef[]>([]);
+  const [allAssets, setAllAssets] = useState<AssetType[]>([]);
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
@@ -31,6 +32,8 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
     status: 'active',
     location: '',
     assignedTo: '',
+    details: '',
+    parentAssetId: 'none',
     // IP Address fields
     ipAddress: '',
     subnet: '',
@@ -72,6 +75,11 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
     assetTypeApi.getAll()
       .then(data => setCustomAssetTypes(data))
       .catch(err => console.error("Failed to load asset types", err));
+
+    // Fetch all assets for parent asset selection
+    assetApi.getAllAssets()
+      .then(data => setAllAssets(data))
+      .catch(err => console.error("Failed to load all assets", err));
   }, []);
 
   useEffect(() => {
@@ -83,6 +91,8 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
         status: editing.status,
         location: editing.location,
         assignedTo: editing.assignedTo || '',
+        details: editing.details || '',
+        parentAssetId: editing.parentAssetId || 'none',
         ipAddress: editing.type === 'ip_address' ? editing.ipAddress : (editing.type?.startsWith('custom_') ? editing.ipAddress || '' : ''),
         subnet: editing.type === 'ip_address' ? editing.subnet : (editing.type?.startsWith('custom_') ? editing.customProperties?.subnet || '' : ''),
         gateway: editing.type === 'ip_address' ? editing.gateway || '' : (editing.type?.startsWith('custom_') ? editing.customProperties?.gateway || '' : ''),
@@ -119,7 +129,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
       }
     } else {
       setFormData({
-        name: '', status: 'active', location: '', assignedTo: '',
+        name: '', status: 'active', location: '', assignedTo: '', details: '', parentAssetId: 'none',
         ipAddress: '', subnet: '', gateway: '', dns: '', vlan: '', isWlan: false,
         serialNumber: '', model: '', manufacturer: '',
         operatingSystem: '', processor: '', memory: '', storage: '', pcIpAddress: '',
@@ -143,6 +153,8 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
       status: formData.status as 'active' | 'inactive' | 'maintenance',
       location: formData.location,
       assignedTo: formData.assignedTo || undefined,
+      details: formData.details || undefined,
+      parentAssetId: formData.parentAssetId !== 'none' ? formData.parentAssetId : undefined,
       createdAt: editingAsset?.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -675,9 +687,28 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="assignedTo">Assigned To</Label>
+              <Input id="assignedTo" value={formData.assignedTo} onChange={(e) => handleInputChange('assignedTo', e.target.value)} placeholder="User or Department" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="parentAssetId">Assigned Asset (Parent)</Label>
+              <Select value={formData.parentAssetId} onValueChange={(v) => handleInputChange('parentAssetId', v)}>
+                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {allAssets.filter(a => a.id !== editingAsset?.id).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name} ({a.type})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="assignedTo">Assigned To</Label>
-            <Input id="assignedTo" value={formData.assignedTo} onChange={(e) => handleInputChange('assignedTo', e.target.value)} placeholder="Optional" />
+            <Label htmlFor="details">Details / Notes</Label>
+            <Input id="details" value={formData.details} onChange={(e) => handleInputChange('details', e.target.value)} placeholder="Additional information..." />
           </div>
 
           {renderTypeSpecificFields()}

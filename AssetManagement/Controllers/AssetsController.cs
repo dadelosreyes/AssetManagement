@@ -95,9 +95,20 @@ namespace AssetManagement.Controllers
                     var assetObj = a as Asset;
                     if (assetObj == null) return false;
 
-                    return assetObj.Name.ToLower().Contains(search) ||
+                    var matchesBase = assetObj.Name.ToLower().Contains(search) ||
                            assetObj.Location.ToLower().Contains(search) ||
-                           (assetObj.AssignedTo?.ToLower().Contains(search) ?? false);
+                           (assetObj.AssignedTo?.ToLower().Contains(search) ?? false) ||
+                           (assetObj.Details?.ToLower().Contains(search) ?? false);
+                           
+                    if (matchesBase) return true;
+
+                    var customAsset = a as CustomAsset;
+                    if (customAsset != null && customAsset.CustomProperties != null)
+                    {
+                        if (customAsset.CustomProperties.Values.Any(v => v != null && v.ToLower().Contains(search))) return true;
+                    }
+
+                    return false;
                 }).ToList();
             }
 
@@ -238,12 +249,17 @@ namespace AssetManagement.Controllers
             
             // Search in CustomAssets
             var customAssets = await _context.CustomAssets
-                .Where(c => c.Name.ToLower().Contains(searchTerm) ||
-                           c.Location.ToLower().Contains(searchTerm) ||
-                           (c.AssignedTo != null && c.AssignedTo.ToLower().Contains(searchTerm)))
                 .ToListAsync();
-            // Optional: can filter into CustomProperties strings as well if we write an EF.Functions.Like or evaluate locally
-            results.AddRange(customAssets);
+
+            var filteredCustomAssets = customAssets.Where(c => 
+                           c.Name.ToLower().Contains(searchTerm) ||
+                           c.Location.ToLower().Contains(searchTerm) ||
+                           (c.AssignedTo != null && c.AssignedTo.ToLower().Contains(searchTerm)) ||
+                           (c.Details != null && c.Details.ToLower().Contains(searchTerm)) ||
+                           (c.CustomProperties != null && c.CustomProperties.Values.Any(v => v != null && v.ToLower().Contains(searchTerm)))
+                ).ToList();
+                
+            results.AddRange(filteredCustomAssets);
 
             return Ok(results);
         }

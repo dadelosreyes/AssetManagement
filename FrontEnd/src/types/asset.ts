@@ -5,6 +5,8 @@ export interface Asset {
   status: 'active' | 'inactive' | 'maintenance';
   location: string;
   assignedTo?: string;
+  details?: string;
+  parentAssetId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +89,7 @@ export interface AssetTypeDef {
   description?: string;
   isCustom: boolean;
   requiresIpAddress: boolean;
+  icon?: string;
   createdAt: Date;
   updatedAt: Date;
   fields: AssetTypeField[];

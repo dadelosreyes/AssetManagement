@@ -41,6 +41,13 @@ namespace AssetManagement.Data
                 .Property(f => f.DataType)
                 .HasConversion<string>();
 
+            // Configure self-referencing relationship for Asset
+            modelBuilder.Entity<Asset>()
+                .HasOne(a => a.ParentAsset)
+                .WithMany()
+                .HasForeignKey(a => a.ParentAssetId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configure dictionary as JSON
             modelBuilder.Entity<CustomAsset>()
                 .Property(b => b.CustomProperties)
