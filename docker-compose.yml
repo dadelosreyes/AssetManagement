@@ -12,9 +12,9 @@ services:
     restart: on-failure
 
   frontend:
-    image: ghcr.io/dadelosreyes/assetmanagement-frontend:latest
+    image: ghcr.io/dadelosreyes/assetmanagement-frontend:sha-68372df
     ports:
-      - "0.0.0.0:8080:80"
+      - "0.0.0.0:8080:8080"
     depends_on:
       - api
     restart: on-failure

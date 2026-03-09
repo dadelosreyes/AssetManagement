@@ -17,12 +17,18 @@ ENV VITE_API_URL=$VITE_API_URL
 # Build the Vite app
 RUN npm run build
 
-# Serve with nginx
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+# Serve with node static server (serve)
+FROM node:20-alpine
+WORKDIR /app
 
-# Copy nginx config (supports SPA routing + /api proxy to backend)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install the serve package globally
+RUN npm install -g serve
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Copy the built assets from the previous stage
+COPY --from=build /app/dist .
+
+# Expose port 8080 (which docker-compose maps to 8080)
+EXPOSE 8080
+
+# Run the static server (single page application mode)
+CMD ["serve", "-s", ".", "-l", "8080"]
