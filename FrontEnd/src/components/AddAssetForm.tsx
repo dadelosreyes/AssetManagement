@@ -444,6 +444,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
                       <SelectItem value="accessPoint">Access Point</SelectItem>
                       <SelectItem value="firewall">Firewall</SelectItem>
                       <SelectItem value="modem">Modem</SelectItem>
+                      <SelectItem value="nvr">NVR</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
@@ -498,6 +499,7 @@ export const AddAssetForm = ({ isOpen, onClose, onSave, editingAsset }: AddAsset
                       <SelectItem value="smartphone">Smartphone</SelectItem>
                       <SelectItem value="tablet">Tablet</SelectItem>
                       <SelectItem value="laptop">Laptop</SelectItem>
+                      <SelectItem value="titi">titi</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
