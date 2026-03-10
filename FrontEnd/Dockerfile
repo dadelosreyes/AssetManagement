@@ -10,10 +10,6 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Pass backend API URL at build time
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
 # Build the Vite app
 RUN npm run build
 
@@ -27,8 +23,12 @@ RUN npm install -g serve
 # Copy the built assets from the previous stage
 COPY --from=build /app/dist .
 
+# Copy the entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Expose port 8080 (which docker-compose maps to 8080)
 EXPOSE 8080
 
-# Run the static server (single page application mode)
-CMD ["serve", "-s", ".", "-l", "8080"]
+# Use entrypoint script to generate runtime env config and start serve
+ENTRYPOINT ["/docker-entrypoint.sh"]

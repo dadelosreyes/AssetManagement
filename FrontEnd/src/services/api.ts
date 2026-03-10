@@ -10,8 +10,15 @@ import {
   CustomAsset,
 } from "@/types/asset";
 
+// Runtime config injected by docker-entrypoint.sh (production)
+declare global {
+  interface Window {
+    _env_?: { VITE_API_URL?: string };
+  }
+}
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "/api";
+  window._env_?.VITE_API_URL || import.meta.env.VITE_API_URL || "/api";
 
 // Generic fetch wrapper with error handling
 // Generic fetch wrapper with error handling

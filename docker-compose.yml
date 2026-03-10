@@ -11,8 +11,10 @@ services:
 
   frontend:
     image: ghcr.io/dadelosreyes/assetmanagement-frontend:latest
+    environment:
+      - VITE_API_URL=http://10.10.20.18:5000/api
     ports:
-      - "10.10.20.18:8080:80"
+      - "10.10.20.18:8080:8080"
     depends_on:
       - api
     restart: on-failure
