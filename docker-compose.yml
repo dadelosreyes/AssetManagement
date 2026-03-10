@@ -10,7 +10,7 @@ services:
     restart: on-failure
 
   frontend:
-    image: ghcr.io/dadelosreyes/assetmanagement-frontend:sha-68372df
+    image: ghcr.io/dadelosreyes/assetmanagement-frontend:latest
     ports:
       - "10.10.20.18:8080:80"
     depends_on:

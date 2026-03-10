@@ -56,7 +56,7 @@ export const AssetTable = ({ assets, assetTypes = [], onAddAsset, onEditAsset, o
   const availableVlans = Array.from(new Set(
     assets
       .filter(asset => asset.type === 'ip_address')
-      .map(asset => asset.vlan)
+      .map(asset => (asset as any).vlan)
       .filter(Boolean)
   )).sort();
 
@@ -256,142 +256,142 @@ export const AssetTable = ({ assets, assetTypes = [], onAddAsset, onEditAsset, o
           );
         }
         return null;
-    };
-
-    const hasIpAddress = (asset: AssetType): boolean => {
-      return 'ipAddress' in asset && !!asset.ipAddress;
-    };
-
-    return (
-      <Card className="shadow-medium">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">Asset Inventory</CardTitle>
-              <CardDescription>Manage all your IT assets</CardDescription>
-            </div>
-            <Button onClick={onAddAsset} className="bg-gradient-primary shadow-soft">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Asset
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search assets..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="type-filter">Type:</Label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
-                  {assetTypes.map(t => (
-                    <SelectItem key={`custom_${t.id}`} value={`custom_${t.id}`}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="vlan-filter">VLAN:</Label>
-              <Select value={selectedVlan} onValueChange={setSelectedVlan}>
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All VLANs</SelectItem>
-                  {availableVlans.map(vlan => (
-                    <SelectItem key={vlan} value={vlan!}>{vlan}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead>Type</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Updated At</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAssets.map((asset) => (
-                  <TableRow key={asset.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getTypeIcon(asset.type, asset)}
-                        <span className="text-sm">{getTypeName(asset.type, asset)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{asset.name}</TableCell>
-                    <TableCell>{getAssetDetails(asset)}</TableCell>
-                    <TableCell>{getStatusBadge(asset.status)}</TableCell>
-                    <TableCell>{asset.location}</TableCell>
-                    <TableCell>{asset.assignedTo || '-'}</TableCell>
-                    <TableCell>{new Date(asset.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(asset.updatedAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {hasIpAddress(asset) && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => testConnection(asset)}
-                            disabled={testingConnections.has(asset.id)}
-                            title="Test Connection"
-                          >
-                            {testingConnections.has(asset.id) ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Wifi className="h-4 w-4" />
-                            )}
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="sm" onClick={() => onEditAsset(asset)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => onDeleteAsset(asset.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredAssets.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      No assets found matching your search criteria.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    }
   };
+
+  const hasIpAddress = (asset: AssetType): boolean => {
+    return 'ipAddress' in asset && !!asset.ipAddress;
+  };
+
+  return (
+    <Card className="shadow-medium">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">Asset Inventory</CardTitle>
+            <CardDescription>Manage all your IT assets</CardDescription>
+          </div>
+          <Button onClick={onAddAsset} className="bg-gradient-primary shadow-soft">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Asset
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search assets..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="type-filter">Type:</Label>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {Object.entries(ASSET_TYPE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+                {assetTypes.map(t => (
+                  <SelectItem key={`custom_${t.id}`} value={`custom_${t.id}`}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="vlan-filter">VLAN:</Label>
+            <Select value={selectedVlan} onValueChange={setSelectedVlan}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All VLANs</SelectItem>
+                {availableVlans.map(vlan => (
+                  <SelectItem key={vlan} value={vlan!}>{vlan}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead>Type</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Assigned To</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead>Updated At</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAssets.map((asset) => (
+                <TableRow key={asset.id} className="hover:bg-muted/50">
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getTypeIcon(asset.type, asset)}
+                      <span className="text-sm">{getTypeName(asset.type, asset)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{asset.name}</TableCell>
+                  <TableCell>{getAssetDetails(asset)}</TableCell>
+                  <TableCell>{getStatusBadge(asset.status)}</TableCell>
+                  <TableCell>{asset.location}</TableCell>
+                  <TableCell>{asset.assignedTo || '-'}</TableCell>
+                  <TableCell>{new Date(asset.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(asset.updatedAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {hasIpAddress(asset) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => testConnection(asset)}
+                          disabled={testingConnections.has(asset.id)}
+                          title="Test Connection"
+                        >
+                          {testingConnections.has(asset.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Wifi className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => onEditAsset(asset)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => onDeleteAsset(asset.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredAssets.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    No assets found matching your search criteria.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default AssetTable;
