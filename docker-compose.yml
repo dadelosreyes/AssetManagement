@@ -6,11 +6,8 @@ services:
       - ConnectionStrings__AssetManagementContext=Data Source=10.10.11.240;Database=AssetManagement;User ID=sa;Password=Zebrap430i;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False;
       - ASPNETCORE_ENVIRONMENT=Production
       # add swagger gen
-      
-
-
     ports:
-      - "10.10.20.18:5000:80"
+      - "10.10.20.18:5000:8080"
     restart: on-failure
 
   frontend:
