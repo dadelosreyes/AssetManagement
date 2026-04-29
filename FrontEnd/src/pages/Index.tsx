@@ -164,7 +164,6 @@ const Index = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <DebugPanel />
       </div>
     </div>
   );
