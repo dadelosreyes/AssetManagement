@@ -179,8 +179,12 @@ const Assets = () => {
           assets={assets}
           onAddAsset={handleAddAsset}
           onEditAsset={handleEditAsset}
-          onDeleteAsset={handleDeleteAsset}
-        />
+          onDeleteAsset={handleDeleteAsset} 
+          onViewAsset={function (asset: AssetType): void {
+            throw new Error("Function not implemented.");
+            
+          } }        
+          />
 
         <AddAssetForm
           isOpen={isFormOpen}

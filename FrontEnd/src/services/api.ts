@@ -303,3 +303,4 @@ export const customAssetApi = {
   delete: async (id: string): Promise<void> =>
     fetchApi<void>(`/CustomAssets/${id}`, { method: "DELETE" }),
 };
+
