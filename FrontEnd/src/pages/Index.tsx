@@ -116,6 +116,10 @@ const Index = () => {
       deleteMutation.mutate(deleteAssetId);
     }
   };
+  const handleViewAsset = (asset: AssetType) => {
+    // For now, just show a toast. You can replace this with a modal or a new page.
+    toast({ title: "View Asset", description: `Viewing details for asset: ${asset.name}` });
+  }
 
   const handleAddAsset = () => {
     setEditingAsset(undefined);
@@ -131,14 +135,15 @@ const Index = () => {
 
         <AssetDashboard assets={assets} />
 
-        <AssetTable
+        {/* <AssetTable
           assets={assets}
           onAddAsset={handleAddAsset}
           onEditAsset={handleEditAsset}
           onDeleteAsset={handleDeleteAsset}
-        />
-
-        <AddAssetForm
+          onViewAsset={handleViewAsset}
+        /> */}
+      
+        {/* <AddAssetForm
           isOpen={isFormOpen}
           onClose={() => {
             setIsFormOpen(false);
@@ -146,7 +151,8 @@ const Index = () => {
           }}
           onSave={handleSaveAsset}
           editingAsset={editingAsset}
-        />
+        /> */}
+
 
         <AlertDialog open={!!deleteAssetId} onOpenChange={() => setDeleteAssetId(null)}>
           <AlertDialogContent>

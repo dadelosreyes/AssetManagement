@@ -3,7 +3,8 @@ services:
     image: ghcr.io/dadelosreyes/assetmanagement-api:latest
     environment:
       # External SQL Server — EF Core will auto-apply migrations on startup via db.Database.Migrate()
-      - ConnectionStrings__AssetManagementContext=Data Source=10.10.11.240;Database=AssetManagement;User ID=sa;Password=Zebrap430i;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False;
+      # ConnectionStrings__AssetManagementContext=Data Source=10.10.20.18;Database=AssetManagement;User ID=sa;Password=@zameco2;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=False;
+      - ConnectionStrings__AssetManagementContext=Data Source=CORPLAN-DAVE\\SQLEXPRESS;TrustServerCertificate=True;Initial Catalog=AssetManagement;Integrated Security=SSPI
       - ASPNETCORE_ENVIRONMENT=Production
       # add swagger gen
     ports:
